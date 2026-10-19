@@ -11,6 +11,7 @@ import { CosmicBackground } from './components/CosmicBackground.tsx';
 import { SynthesisView } from './components/SynthesisView.tsx';
 import { InteractiveRemedyChat } from './components/InteractiveRemedyChat.tsx';
 import { JournalModal, SavedJournalEntry } from './components/JournalModal.tsx';
+import { CaptchaBox } from './components/CaptchaBox.tsx';
 import {
   CombinedOracleContext,
   assembleOracleContext,
@@ -66,6 +67,8 @@ export default function App() {
   const [showGuide, setShowGuide] = useState(false);
   const [journalEntries, setJournalEntries] = useState<SavedJournalEntry[]>([]);
   const [isSavedInJournal, setIsSavedInJournal] = useState(false);
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Load journal from localStorage
   useEffect(() => {
@@ -112,23 +115,22 @@ export default function App() {
   };
 
   // The Primary Trigger: "Conquer Compatibility"
-  const handleConquerCompatibility = async () => {
+  const handleConquerCompatibility = async (isAutoUpdate = false, bypassCaptcha = false) => {
     if (!userBirthdate || !partnerBirthdate) return;
+    if (!isCaptchaVerified && !bypassCaptcha) {
+      setHasAttemptedSubmit(true);
+      return;
+    }
 
     setIsCasting(true);
     setCastingStep(1);
     setIsSavedInJournal(false);
-    if (soundEnabled) playDeepGong();
+    if (soundEnabled && !isAutoUpdate) playDeepGong();
 
     // High-precision Keplerian ephemeris calculation
     const chart1 = calculatePreciseNatalChart(userBirthdate);
     const chart2 = calculatePreciseNatalChart(partnerBirthdate);
     const exactAspects = calculateExactSynastryAspects(chart1, chart2);
-
-    // Visual casting sequence steps
-    const stepTimer1 = setTimeout(() => setCastingStep(2), 600);
-    const stepTimer2 = setTimeout(() => setCastingStep(3), 1200);
-    const stepTimer3 = setTimeout(() => setCastingStep(4), 1800);
 
     try {
       const response = await fetch('/api/oracle/synthesize', {
@@ -154,7 +156,7 @@ export default function App() {
         chart2,
         exactAspects,
       });
-      if (soundEnabled) playCrystalChime(528, 4.0); // 528 Hz Love frequency
+      if (soundEnabled && !isAutoUpdate) playCrystalChime(528, 4.0);
     } catch (err) {
       console.warn('API error, falling back to local deterministic synthesis engine:', err);
       const context = assembleOracleContext(
@@ -173,16 +175,28 @@ export default function App() {
         chart2,
         exactAspects,
       });
-      if (soundEnabled) playCrystalChime(528, 4.0);
+      if (soundEnabled && !isAutoUpdate) playCrystalChime(528, 4.0);
     } finally {
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
-      clearTimeout(stepTimer3);
       setIsCasting(false);
       setCastingStep(0);
-      window.scrollTo({ top: 380, behavior: 'smooth' });
+      if (!isAutoUpdate) {
+        window.scrollTo({ top: 380, behavior: 'smooth' });
+      }
     }
   };
+
+  // Automatically update reading whenever either birthdate is changed
+  useEffect(() => {
+    if (!isCaptchaVerified) return;
+    if (!userBirthdate || !partnerBirthdate) return;
+    if (userBirthdate.length < 10 || partnerBirthdate.length < 10) return;
+
+    const timer = setTimeout(() => {
+      handleConquerCompatibility(true);
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [userBirthdate, partnerBirthdate]);
 
   const loadPresetPair = (d1: string, d2: string, uN: string, pN: string, focus: string) => {
     setUserBirthdate(d1);
@@ -307,10 +321,28 @@ export default function App() {
             </div>
           </div>
 
+          {/* CAPTCHA Verification Box */}
+          <div className="mt-7">
+            <CaptchaBox
+              isVerified={isCaptchaVerified}
+              onVerify={(verified) => {
+                setIsCaptchaVerified(verified);
+                if (verified) {
+                  if (soundEnabled) playCrystalChime(639, 1.5);
+                  // Automatically trigger calculation upon check
+                  if (userBirthdate && partnerBirthdate) {
+                    handleConquerCompatibility(false, true);
+                  }
+                }
+              }}
+              hasAttemptedSubmit={hasAttemptedSubmit}
+            />
+          </div>
+
           {/* THE SINGLE ICONIC TRIGGER: "Conquer Compatibility" */}
-          <div className="mt-8 text-center">
+          <div className="mt-5 text-center">
             <button
-              onClick={handleConquerCompatibility}
+              onClick={() => handleConquerCompatibility(false)}
               disabled={isCasting || !userBirthdate || !partnerBirthdate}
               className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 font-title font-extrabold text-base tracking-widest flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mx-auto cursor-pointer"
             >
@@ -318,8 +350,8 @@ export default function App() {
               <span>{isCasting ? 'Synthesizing 5 Esoteric Lineages...' : 'Conquer Compatibility'}</span>
               <ArrowRight className="w-5 h-5 text-stone-950" />
             </button>
-            <p className="text-[11px] text-stone-500 font-mono mt-2.5">
-              Simultaneously executes Pennick Geomancy, I Ching, Keplerian Synastry, Chinese Branches, and Lunar Alchemy.
+            <p className="text-[11px] text-stone-400 font-mono mt-2.5">
+              Live updates active • Reading automatically updates when either birthdate is changed
             </p>
           </div>
         </div>
