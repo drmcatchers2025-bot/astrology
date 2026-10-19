@@ -1,0 +1,6 @@
+{
+  "name": "The Syncretic Star & Hexagram Oracle",
+  "description": "Multi-system relationship and love oracle synthesizing Nigel Pennick's geomancy, the I Ching, Western astrology, Chinese zodiac, and lunar alchemy into a unified Past-Present-Future daily reading with interactive remedies.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
