@@ -10,7 +10,6 @@ import React, { useState, useEffect } from 'react';
 import { CosmicBackground } from './components/CosmicBackground.tsx';
 import { SynthesisView } from './components/SynthesisView.tsx';
 import { InteractiveRemedyChat } from './components/InteractiveRemedyChat.tsx';
-import { SacredMandala } from './components/SacredMandala.tsx';
 import { JournalModal, SavedJournalEntry } from './components/JournalModal.tsx';
 import {
   CombinedOracleContext,
@@ -348,7 +347,7 @@ export default function App() {
           </div>
         )}
 
-        {/* THE SYNTHESIZED LOVE READING & SACRED MANDALA */}
+        {/* THE SYNTHESIZED LOVE READING & INTERACTIVE APOTHECARY */}
         {activeReading && !isCasting && (
           <div className="space-y-8 animate-fade-in">
             {/* 1. Strict Past-Present-Future Synthesis */}
@@ -363,18 +362,7 @@ export default function App() {
               }}
             />
 
-            {/* 2. Procedural Sacred Geometry Mandala Visualizer */}
-            <SacredMandala
-              chart1={activeReading.chart1}
-              chart2={activeReading.chart2}
-              aspects={activeReading.exactAspects}
-              user1Name={activeReading.context.queryMeta.userName}
-              user2Name={activeReading.context.queryMeta.partnerName}
-              hexagramPattern={activeReading.context.iching.primaryHexagram.binaryPattern}
-              geomanticDots={activeReading.context.pennick.primaryFigure.dots}
-            />
-
-            {/* 3. The Interactive Remedy & Apothecary Loop */}
+            {/* 2. The Interactive Remedy & Apothecary Loop */}
             <InteractiveRemedyChat
               context={activeReading.context}
               soundEnabled={soundEnabled}
