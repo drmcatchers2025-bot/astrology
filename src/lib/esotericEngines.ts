@@ -1140,3 +1140,31 @@ export function generateLocalSyncreticSynthesis(ctx: CombinedOracleContext): {
     remedyPreview,
   };
 }
+
+/**
+ * High-Fidelity Local Prescription Generator for offline mode.
+ * Synthesizes Nigel Pennick earth magic and I Ching lines without network.
+ */
+export function generateLocalPrescription(ctx: CombinedOracleContext, question: string = ''): string {
+  const { pennick, iching, astrology, chinese, lunarElemental, queryMeta } = ctx;
+
+  return `✨ **The Diagnosis**:
+Today's confluence of Nigel Pennick’s ${pennick.primaryFigure.name} (${pennick.primaryFigure.latinName}) and I Ching Hexagram ${iching.primaryHexagram.number} (${iching.primaryHexagram.name}) highlights an energetic accumulation along the ${pennick.primaryFigure.direction} telluric corridor. To address your inquiry "${question || 'harmonizing today’s relationship dynamic'}", the immediate priority is rebalancing the ${lunarElemental.elementalDeficit} element between ${queryMeta.userName} and ${queryMeta.partnerName}.
+
+🌿 **Nigel Pennick’s Earth & Botanical Prescription**:
+- **Botanical Ally**: Work with **${pennick.primaryFigure.herbalAlly}**. In Pennick's tradition, placing this dried herb near your sleeping quarters or sipping an infusion calms reactionary nervous spikes.
+- **Directional Alignment**: Turn toward the **${pennick.primaryFigure.direction}** during morning or evening reflection to harmonize with the active telluric earth current (${pennick.directionalTide}).
+- **Geomantic Inscription**: Trace the fourfold dot pattern of *${pennick.primaryFigure.latinName}* (${pennick.primaryFigure.dots.join('-')}) onto parchment or smooth birch wood to ground impulsive friction.
+
+⚡ **I Ching Behavioral Adjustment**:
+- Line ${iching.changingLinePositions[0]} of Hexagram ${iching.primaryHexagram.name} warns against rushing to conclusion or reacting defensively. When speaking with ${queryMeta.partnerName} today, practice an intentional 3-breath pause before answering.
+- Cultivate the receptive strength of Hexagram ${iching.transformedHexagram?.number} (${iching.transformedHexagram?.name}): lead through understanding rather than force.
+
+🕯️ **Sacred Evening Ritual**:
+1. Cleanse a bowl of clear spring water with a pinch of coarse sea salt.
+2. Light a single natural beeswax candle, invoking the rune **${pennick.activeRune.glyph} (${pennick.activeRune.rune})** for ${pennick.activeRune.meaning.toLowerCase()}.
+3. Speak aloud: *"Rooted in the quiet earth, our love does not haste; in patient truth, the sacred path unfolds."*
+
+🔮 **Sovereign Mantram**:
+*"Rooted in the ancient soil, we honor each other's pace; in quiet presence, our true bond deepens."*`;
+}

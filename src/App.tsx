@@ -32,6 +32,7 @@ import {
   History,
   Info,
   ArrowRight,
+  Dices,
 } from 'lucide-react';
 
 export default function App() {
@@ -114,9 +115,39 @@ export default function App() {
     if (soundEnabled) playCrystalChime(741, 2.0);
   };
 
-  // The Primary Trigger: "Conquer Compatibility"
-  const handleConquerCompatibility = async (isAutoUpdate = false, bypassCaptcha = false) => {
-    if (!userBirthdate || !partnerBirthdate) return;
+  // Date generation and archetypes for spontaneous random readings
+  const generateRandomDate = (minYear = 1972, maxYear = 2004): string => {
+    const year = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;
+    const month = Math.floor(Math.random() * 12) + 1;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const day = Math.floor(Math.random() * daysInMonth) + 1;
+    const mm = month < 10 ? `0${month}` : `${month}`;
+    const dd = day < 10 ? `0${day}` : `${day}`;
+    return `${year}-${mm}-${dd}`;
+  };
+
+  const RANDOM_ARCHETYPE_PROFILES = [
+    { focus: 'Deepening Intimacy & Vulnerability', uN: 'Solar Seeker', pN: 'Lunar Mystic' },
+    { focus: 'Navigating Karmic Friction & Elemental Clashes', uN: 'Fire Catalyst', pN: 'Water Anchor' },
+    { focus: 'Future Commitment & Sacred Hearth', uN: 'Earth Builder', pN: 'Celestial Dreamer' },
+    { focus: 'Soulmate Purpose & Creative Co-Creation', uN: 'Air Visionary', pN: 'Starlight Weaver' },
+    { focus: 'Twin Flame Mirroring & Alchemical Union', uN: 'Solar Sovereign', pN: 'Lunar Beloved' },
+    { focus: 'Transcending Past Patterns & Rebuilding Trust', uN: 'Wounded Healer', pN: 'Steadfast Guardian' },
+    { focus: 'Spontaneous Chemistry & Playful Flirtation', uN: 'Zephyr Flame', pN: 'Ocean Tide' },
+    { focus: 'Cosmic Fate & Telluric Earth Currents', uN: 'Forest Wanderer', pN: 'Mountain Sage' },
+  ];
+
+  // Core synthesis executor used by both Conquer Compatibility and Random Reading
+  const executeSynthesis = async (
+    b1: string,
+    b2: string,
+    uN: string,
+    pN: string,
+    focus: string,
+    isAutoUpdate = false,
+    bypassCaptcha = false
+  ) => {
+    if (!b1 || !b2) return;
     if (!isCaptchaVerified && !bypassCaptcha) {
       setHasAttemptedSubmit(true);
       return;
@@ -128,8 +159,8 @@ export default function App() {
     if (soundEnabled && !isAutoUpdate) playDeepGong();
 
     // High-precision Keplerian ephemeris calculation
-    const chart1 = calculatePreciseNatalChart(userBirthdate);
-    const chart2 = calculatePreciseNatalChart(partnerBirthdate);
+    const chart1 = calculatePreciseNatalChart(b1);
+    const chart2 = calculatePreciseNatalChart(b2);
     const exactAspects = calculateExactSynastryAspects(chart1, chart2);
 
     try {
@@ -137,11 +168,11 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userBirthdate,
-          partnerBirthdate,
-          userName: userName.trim() || 'You',
-          partnerName: partnerName.trim() || 'Partner',
-          relationshipFocus,
+          userBirthdate: b1,
+          partnerBirthdate: b2,
+          userName: uN.trim() || 'You',
+          partnerName: pN.trim() || 'Partner',
+          relationshipFocus: focus,
         }),
       });
 
@@ -160,11 +191,11 @@ export default function App() {
     } catch (err) {
       console.warn('API error, falling back to local deterministic synthesis engine:', err);
       const context = assembleOracleContext(
-        userBirthdate,
-        partnerBirthdate,
-        userName.trim() || 'You',
-        partnerName.trim() || 'Partner',
-        relationshipFocus
+        b1,
+        b2,
+        uN.trim() || 'You',
+        pN.trim() || 'Partner',
+        focus
       );
       const localSynth = generateLocalSyncreticSynthesis(context);
       setActiveReading({
@@ -185,6 +216,47 @@ export default function App() {
     }
   };
 
+  // The Primary Trigger: "Conquer Compatibility"
+  const handleConquerCompatibility = async (isAutoUpdate = false, bypassCaptcha = false) => {
+    await executeSynthesis(
+      userBirthdate,
+      partnerBirthdate,
+      userName,
+      partnerName,
+      relationshipFocus,
+      isAutoUpdate,
+      bypassCaptcha
+    );
+  };
+
+  // The Spontaneous Trigger: "Random Reading"
+  const handleRandomReading = () => {
+    const d1 = generateRandomDate();
+    let d2 = generateRandomDate();
+    while (d2 === d1) {
+      d2 = generateRandomDate();
+    }
+    const profile = RANDOM_ARCHETYPE_PROFILES[Math.floor(Math.random() * RANDOM_ARCHETYPE_PROFILES.length)];
+
+    setUserBirthdate(d1);
+    setPartnerBirthdate(d2);
+    setUserName(profile.uN);
+    setPartnerName(profile.pN);
+    setRelationshipFocus(profile.focus);
+    setIsCaptchaVerified(true);
+    setHasAttemptedSubmit(false);
+
+    if (soundEnabled) playCrystalChime(639, 2.0);
+
+    // Cast immediately with bypassCaptcha = true
+    executeSynthesis(d1, d2, profile.uN, profile.pN, profile.focus, false, true);
+  };
+
+  // Cast initial reading on app load so user instantly experiences a live reading
+  useEffect(() => {
+    handleRandomReading();
+  }, []);
+
   // Automatically update reading whenever either birthdate is changed
   useEffect(() => {
     if (!isCaptchaVerified) return;
@@ -197,15 +269,6 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, [userBirthdate, partnerBirthdate]);
-
-  const loadPresetPair = (d1: string, d2: string, uN: string, pN: string, focus: string) => {
-    setUserBirthdate(d1);
-    setPartnerBirthdate(d2);
-    setUserName(uN);
-    setPartnerName(pN);
-    setRelationshipFocus(focus);
-    if (soundEnabled) playCrystalChime(432, 1.5);
-  };
 
   return (
     <div className="min-h-screen bg-[#07080d] text-[#ded7c6] relative selection:bg-amber-500/30 font-serif">
@@ -229,6 +292,16 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleRandomReading}
+              disabled={isCasting}
+              className="p-2 rounded-xl bg-purple-950/60 border border-purple-500/40 text-purple-300 hover:text-amber-200 hover:border-amber-500/40 transition-all text-xs flex items-center gap-1.5 font-mono cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.2)]"
+              title="Cast a spontaneous random reading"
+            >
+              <Dices className="w-4 h-4 text-purple-300" />
+              <span className="hidden sm:inline">Random Reading</span>
+            </button>
+
             <button
               onClick={() => setShowGuide(true)}
               className="p-2 rounded-xl bg-stone-900/60 border border-stone-800 text-stone-400 hover:text-amber-200 hover:border-amber-500/40 transition-all text-xs flex items-center gap-1.5 font-mono"
@@ -276,13 +349,24 @@ export default function App() {
 
         {/* STREAMLINED INTAKE PORTAL */}
         <div className="bg-[#0b0e17]/95 border-2 border-amber-500/35 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative">
-          <div className="text-center pb-6 border-b border-stone-800 mb-6">
-            <h3 className="font-title text-lg sm:text-xl font-bold text-amber-200">
-              The Solar Inception Gates
-            </h3>
-            <p className="text-xs text-stone-400 mt-1 font-mono">
-              Enter both solar returns to calculate exact celestial angles down to the arc-minute.
-            </p>
+          <div className="flex flex-col sm:flex-row items-center justify-between pb-6 border-b border-stone-800 mb-6 gap-3">
+            <div className="text-center sm:text-left">
+              <h3 className="font-title text-lg sm:text-xl font-bold text-amber-200">
+                The Solar Inception Gates
+              </h3>
+              <p className="text-xs text-stone-400 mt-1 font-mono">
+                Enter both solar returns or cast a spontaneous cosmic pairing.
+              </p>
+            </div>
+            <button
+              onClick={handleRandomReading}
+              disabled={isCasting}
+              className="px-3.5 py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/40 hover:border-amber-400 text-purple-200 hover:text-amber-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+              title="Randomize birthdates and generate reading"
+            >
+              <Dices className="w-3.5 h-3.5 text-purple-300" />
+              <span>Randomize Dates</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -339,21 +423,31 @@ export default function App() {
             />
           </div>
 
-          {/* THE SINGLE ICONIC TRIGGER: "Conquer Compatibility" */}
-          <div className="mt-5 text-center">
+          {/* THE DUAL TRIGGERS: "Conquer Compatibility" and "✦ Random Reading" */}
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <button
               onClick={() => handleConquerCompatibility(false)}
               disabled={isCasting || !userBirthdate || !partnerBirthdate}
-              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 font-title font-extrabold text-base tracking-widest flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mx-auto cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 font-title font-extrabold text-sm sm:text-base tracking-widest flex items-center justify-center gap-2.5 shadow-[0_0_35px_rgba(245,158,11,0.35)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Sparkles className="w-5 h-5 text-stone-950" />
-              <span>{isCasting ? 'Synthesizing 5 Esoteric Lineages...' : 'Conquer Compatibility'}</span>
-              <ArrowRight className="w-5 h-5 text-stone-950" />
+              <span>{isCasting ? 'Synthesizing 5 Lineages...' : 'Conquer Compatibility'}</span>
+              <ArrowRight className="w-4 h-4 text-stone-950" />
             </button>
-            <p className="text-[11px] text-stone-400 font-mono mt-2.5">
-              Live updates active • Reading automatically updates when either birthdate is changed
-            </p>
+
+            <button
+              onClick={handleRandomReading}
+              disabled={isCasting}
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-stone-900 to-amber-950/80 border-2 border-purple-400/50 hover:border-amber-400/70 text-purple-100 hover:text-amber-200 font-title font-bold text-sm sm:text-base tracking-wider flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(168,85,247,0.25)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              title="Generate a completely spontaneous random reading with randomized birthdates"
+            >
+              <Dices className="w-5 h-5 text-purple-300" />
+              <span>✦ Random Reading</span>
+            </button>
           </div>
+          <p className="text-[11px] text-stone-400 font-mono mt-3 text-center">
+            Live updates active • Reading automatically updates when either birthdate is changed
+          </p>
         </div>
 
         {/* CASTING PROGRESS ANIMATION */}
@@ -392,6 +486,7 @@ export default function App() {
               onScrollToRemedies={() => {
                 document.getElementById('remedies-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
+              onRandomReading={handleRandomReading}
             />
 
             {/* 2. The Interactive Remedy & Apothecary Loop */}

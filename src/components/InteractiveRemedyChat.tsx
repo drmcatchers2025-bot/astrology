@@ -6,9 +6,9 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CombinedOracleContext } from '../lib/esotericEngines.ts';
+import { CombinedOracleContext, generateLocalPrescription } from '../lib/esotericEngines.ts';
 import { playCrystalChime } from '../lib/sound.ts';
-import { Send, Loader2, Copy, Check } from 'lucide-react';
+import { Send, Loader2, Copy, Check, WifiOff } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -88,13 +88,16 @@ export const InteractiveRemedyChat: React.FC<Props> = ({ context, soundEnabled }
       setMessages((prev) => [...prev, oracleMsg]);
       if (soundEnabled) playCrystalChime(639, 3.0); // 639 Hz Interpersonal Solfeggio frequency
     } catch (err: any) {
-      const errorMsg: ChatMessage = {
-        id: `error-${Date.now()}`,
+      // Offline / Local prescription generator
+      const offlinePrescription = generateLocalPrescription(context, q);
+      const oracleMsg: ChatMessage = {
+        id: `oracle-${Date.now()}`,
         sender: 'oracle',
-        text: `Based on Pennick's ${pennick.primaryFigure.name} and Hexagram ${iching.primaryHexagram.number}: work with ${pennick.primaryFigure.herbalAlly} and practice unhurried emotional receptivity today.`,
+        text: offlinePrescription,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, oracleMsg]);
+      if (soundEnabled) playCrystalChime(639, 3.0);
     } finally {
       setIsLoading(false);
     }

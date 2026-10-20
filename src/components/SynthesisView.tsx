@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { CombinedOracleContext } from '../lib/esotericEngines.ts';
-import { Sparkles, History, Compass, ArrowRight, Share2, BookmarkCheck, Check, Clock, ShieldAlert, HeartHandshake } from 'lucide-react';
+import { Sparkles, History, Compass, ArrowRight, Share2, BookmarkCheck, Check, Clock, ShieldAlert, HeartHandshake, Dices } from 'lucide-react';
 
 interface SynthesisData {
   headline: string;
@@ -25,6 +25,7 @@ interface Props {
   onSaveToJournal: () => void;
   isSaved: boolean;
   onScrollToRemedies: () => void;
+  onRandomReading?: () => void;
 }
 
 export const SynthesisView: React.FC<Props> = ({
@@ -34,6 +35,7 @@ export const SynthesisView: React.FC<Props> = ({
   onSaveToJournal,
   isSaved,
   onScrollToRemedies,
+  onRandomReading,
 }) => {
   const [copied, setCopied] = useState(false);
   const { queryMeta, pennick, iching, astrology } = context;
@@ -91,7 +93,18 @@ ${synthesis.remedyPreview || 'Nigel Pennick earth allies and I Ching line guidan
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {onRandomReading && (
+              <button
+                onClick={onRandomReading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono bg-purple-950/50 border border-purple-500/40 text-purple-200 hover:bg-purple-900/50 hover:border-purple-300 transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)] cursor-pointer"
+                title="Cast another spontaneous random relationship reading"
+              >
+                <Dices className="w-3.5 h-3.5 text-purple-300" />
+                <span>Next Random Reading</span>
+              </button>
+            )}
+
             <button
               onClick={onSaveToJournal}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all border ${
@@ -106,7 +119,7 @@ ${synthesis.remedyPreview || 'Nigel Pennick earth allies and I Ching line guidan
 
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono bg-stone-900/60 border border-stone-800 text-stone-300 hover:border-amber-500/40 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono bg-stone-900/60 border border-stone-800 text-stone-300 hover:border-amber-500/40 transition-all cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy Reading'}</span>
